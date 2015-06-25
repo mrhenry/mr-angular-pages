@@ -510,18 +510,34 @@ function awaitStates() {
 }
 
 function buildStates(data) {
+  var keys = Object.keys(data.pages);
+  keys.sort();
+
   var _iteratorNormalCompletion = true;
   var _didIteratorError = false;
   var _iteratorError = undefined;
 
   try {
-    for (var _iterator = Object.keys(data.pages)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+    for (var _iterator = keys[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
       var path = _step.value;
 
       var page = data.pages[path];
       var type = lookupPageType.call(data, page.type);
-      var state = _Page.mountPage.call(type, page.id, path);
-      states.push(state);
+
+      if (type.$$state.opts.asChild) {
+        var idx = path.lastIndexOf('/');
+
+        var parentPath = path.slice(0, idx);
+        var childPath = path.slice(idx);
+
+        var state = _Page.mountPage.call(type, page.id, childPath);
+
+        var _parent = data.pages[parentPath];
+        _parent.$$state.state.childStates.push(state);
+      } else {
+        var state = _Page.mountPage.call(type, page.id, path);
+        states.push(state);
+      }
     }
   } catch (err) {
     _didIteratorError = true;

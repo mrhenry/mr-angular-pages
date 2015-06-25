@@ -37,11 +37,29 @@ function awaitStates() {
 }
 
 function buildStates(data) {
-  for (let path of Object.keys(data.pages)) {
+  let keys = Object.keys(data.pages);
+  keys.sort();
+
+  for (let path of keys) {
     let page = data.pages[path];
     let type = data::lookupPageType(page.type);
-    let state = type::mountPage(page.id, path);
-    states.push(state);
+
+    if (type.$$state.opts.asChild) {
+      let idx = path.lastIndexOf('/');
+
+      let parentPath = path.slice(0, idx);
+      let childPath  = path.slice(idx);
+
+      let state = type::mountPage(page.id, childPath);
+
+      let parent = data.pages[parentPath];
+      parent.$$state.state.childStates.push(state);
+
+    } else {
+      let state = type::mountPage(page.id, path);
+      states.push(state);
+    }
+
   }
 }
 
