@@ -4,7 +4,7 @@ export var registeredPageTypes = {};
 
 const DEFAULT_SUFFIX = 'Page';
 
-export function mountPage(pageId, url) {
+export function mountPage(page, url) {
   let _this = this::mountAt(url);
 
   let resolve = Object.assign({}, _this.$$state.state.resolve);
@@ -12,7 +12,8 @@ export function mountPage(pageId, url) {
   _this.$$state.state.name = url;
   _this.$$state.state.childStates = _this.$$state.state.childStates.concat([]);
 
-  resolve.pageId = function resolvePageId() { return pageId; };
+  resolve.pageSummary = function resolvePageSummary() { return page; };
+  resolve.pageId      = function resolvePageId()      { return page.id; };
 
   return _this;
 }
@@ -31,12 +32,13 @@ export function Page(opts) {
       opts.name = name;
     }
 
-    function wrappedConstructor(pageDetails, ...rest) {
+    function wrappedConstructor(pageSummary, pageDetails, ...rest) {
+      this::applyPageSummary(pageSummary);
       this::applyPageDetails(pageDetails);
       constructor.apply(this, rest);
     }
     wrappedConstructor = funcRename(funcName(constructor), wrappedConstructor);
-    wrappedConstructor.$inject = ['pageDetails'].concat(constructor.$inject || []);
+    wrappedConstructor.$inject = ['pageSummary', 'pageDetails'].concat(constructor.$inject || []);
     wrappedConstructor.prototype = constructor.prototype;
 
     opts.resolve = { pageDetails: loadPageDetails };
@@ -50,10 +52,14 @@ export function Page(opts) {
   }
   loadPageDetails.$inject = ['$http', 'pageId']
 
+  function applyPageSummary(data) {
+    this.$pageSummary = data;
+    Object.assign(this, data);
+  }
+
   function applyPageDetails(data) {
-    for (let key of Object.keys(data)) {
-      this[key] = data[key];
-    }
+    this.$pageDetails = data;
+    Object.assign(this, data);
   }
 
   return register;

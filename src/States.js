@@ -51,14 +51,14 @@ function buildStates(data) {
       let parentPath = path.slice(0, idx);
       let childPath  = path.slice(idx);
 
-      let state = type::mountPage(page.id, childPath);
+      let state = type::mountPage(page, childPath);
       stateIndex[path] = state;
 
       let parent = stateIndex[parentPath];
       parent.$$state.state.childStates.push(state);
 
     } else {
-      let state = type::mountPage(page.id, path);
+      let state = type::mountPage(page, path);
       stateIndex[path] = state;
       states.push(state);
     }

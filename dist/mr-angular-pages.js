@@ -344,7 +344,7 @@ var registeredPageTypes = {};
 exports.registeredPageTypes = registeredPageTypes;
 var DEFAULT_SUFFIX = 'Page';
 
-function mountPage(pageId, url) {
+function mountPage(page, url) {
   var _this = _fdAngularCore.mountAt.call(this, url);
 
   var resolve = Object.assign({}, _this.$$state.state.resolve);
@@ -352,8 +352,11 @@ function mountPage(pageId, url) {
   _this.$$state.state.name = url;
   _this.$$state.state.childStates = _this.$$state.state.childStates.concat([]);
 
+  resolve.pageSummary = function resolvePageSummary() {
+    return page;
+  };
   resolve.pageId = function resolvePageId() {
-    return pageId;
+    return page.id;
   };
 
   return _this;
@@ -379,17 +382,18 @@ function Page(opts) {
       opts.name = name;
     }
 
-    function wrappedConstructor(pageDetails) {
+    function wrappedConstructor(pageSummary, pageDetails) {
+      applyPageSummary.call(this, pageSummary);
       applyPageDetails.call(this, pageDetails);
 
-      for (var _len = arguments.length, rest = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-        rest[_key - 1] = arguments[_key];
+      for (var _len = arguments.length, rest = Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+        rest[_key - 2] = arguments[_key];
       }
 
       constructor.apply(this, rest);
     }
     wrappedConstructor = funcRename(funcName(constructor), wrappedConstructor);
-    wrappedConstructor.$inject = ['pageDetails'].concat(constructor.$inject || []);
+    wrappedConstructor.$inject = ['pageSummary', 'pageDetails'].concat(constructor.$inject || []);
     wrappedConstructor.prototype = constructor.prototype;
 
     opts.resolve = { pageDetails: loadPageDetails };
@@ -405,31 +409,14 @@ function Page(opts) {
   }
   loadPageDetails.$inject = ['$http', 'pageId'];
 
+  function applyPageSummary(data) {
+    this.$pageSummary = data;
+    Object.assign(this, data);
+  }
+
   function applyPageDetails(data) {
-    var _iteratorNormalCompletion = true;
-    var _didIteratorError = false;
-    var _iteratorError = undefined;
-
-    try {
-      for (var _iterator = Object.keys(data)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-        var key = _step.value;
-
-        this[key] = data[key];
-      }
-    } catch (err) {
-      _didIteratorError = true;
-      _iteratorError = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion && _iterator['return']) {
-          _iterator['return']();
-        }
-      } finally {
-        if (_didIteratorError) {
-          throw _iteratorError;
-        }
-      }
-    }
+    this.$pageDetails = data;
+    Object.assign(this, data);
   }
 
   return register;
@@ -532,13 +519,13 @@ function buildStates(data) {
         var parentPath = path.slice(0, idx);
         var childPath = path.slice(idx);
 
-        var state = _Page.mountPage.call(type, page.id, childPath);
+        var state = _Page.mountPage.call(type, page, childPath);
         stateIndex[path] = state;
 
         var _parent = stateIndex[parentPath];
         _parent.$$state.state.childStates.push(state);
       } else {
-        var state = _Page.mountPage.call(type, page.id, path);
+        var state = _Page.mountPage.call(type, page, path);
         stateIndex[path] = state;
         states.push(state);
       }
