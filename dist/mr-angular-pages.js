@@ -350,6 +350,7 @@ function mountPage(pageId, url) {
   var resolve = Object.assign({}, _this.$$state.state.resolve);
   _this.$$state.state.resolve = resolve;
   _this.$$state.state.name = url;
+  _this.$$state.state.childStates = _this.$$state.state.childStates.concat([]);
 
   resolve.pageId = function resolvePageId() {
     return pageId;
