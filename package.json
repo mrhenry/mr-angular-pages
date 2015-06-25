@@ -1,6 +1,6 @@
 {
   "name": "mr-angular-pages",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Helpers for dealing with Lalala pages in angular",
   "repository": "https://github.com/mrhenry/mr-angular-pages.git",
   "main": "lib/index.js",
