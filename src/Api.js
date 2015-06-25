@@ -113,15 +113,19 @@ function makeTree(data) {
     pages: pagesByPath,
   };
 
-  function makePath(page, prefix, acc) {
+  function makePath(page, prefix, acc, root) {
     let path = page.path_component == '' ? prefix :
                prefix == '/'             ? `/${page.path_component}` :
                `${prefix}/${page.path_component}`;
 
+    if (!root) root = page;
+
+    page.root = root;
+    page.path = path;
     acc[path] = page;
 
     for (let child of page.children) {
-      makePath(child, path, acc);
+      makePath(child, path, acc, root);
     }
   }
 
