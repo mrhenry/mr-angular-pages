@@ -1,14 +1,15 @@
 import {beforeBoot} from 'fd-angular-core';
 
+let summariesPromise;
+
 beforeBoot(fetchSummaries());
 
-let summariesPromise;
 export function fetchSummaries() {
   if (summariesPromise) return summariesPromise;
   summariesPromise = fetch("/api/pages.json")
     .then(status)
     .then(json)
-    .then(makeTree)
+    .then(makeTree);
   return summariesPromise;
 }
 

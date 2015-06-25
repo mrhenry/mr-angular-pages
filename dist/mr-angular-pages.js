@@ -8,9 +8,9 @@ exports.fetchSummaries = fetchSummaries;
 
 var _fdAngularCore = require('fd-angular-core');
 
-(0, _fdAngularCore.beforeBoot)(fetchSummaries());
-
 var summariesPromise = undefined;
+
+(0, _fdAngularCore.beforeBoot)(fetchSummaries());
 
 function fetchSummaries() {
   if (summariesPromise) return summariesPromise;
