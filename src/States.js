@@ -38,6 +38,7 @@ function awaitStates() {
 
 function buildStates(data) {
   let keys = Object.keys(data.pages);
+  let stateIndex = {};
   keys.sort();
 
   for (let path of keys) {
@@ -51,12 +52,14 @@ function buildStates(data) {
       let childPath  = path.slice(idx);
 
       let state = type::mountPage(page.id, childPath);
+      stateIndex[path] = state;
 
-      let parent = data.pages[parentPath];
+      let parent = stateIndex[parentPath];
       parent.$$state.state.childStates.push(state);
 
     } else {
       let state = type::mountPage(page.id, path);
+      stateIndex[path] = state;
       states.push(state);
     }
 

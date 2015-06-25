@@ -511,6 +511,7 @@ function awaitStates() {
 
 function buildStates(data) {
   var keys = Object.keys(data.pages);
+  var stateIndex = {};
   keys.sort();
 
   var _iteratorNormalCompletion = true;
@@ -531,11 +532,13 @@ function buildStates(data) {
         var childPath = path.slice(idx);
 
         var state = _Page.mountPage.call(type, page.id, childPath);
+        stateIndex[path] = state;
 
-        var _parent = data.pages[parentPath];
+        var _parent = stateIndex[parentPath];
         _parent.$$state.state.childStates.push(state);
       } else {
         var state = _Page.mountPage.call(type, page.id, path);
+        stateIndex[path] = state;
         states.push(state);
       }
     }
