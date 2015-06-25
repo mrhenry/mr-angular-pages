@@ -1,0 +1,33 @@
+{
+  "name": "mr-angular-pages",
+  "version": "0.0.0",
+  "description": "Helpers for dealing with Lalala pages in angular",
+  "repository": "https://github.com/mrhenry/mr-angular-pages.git",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "echo 'No tests...'",
+    "build": "make"
+  },
+  "keywords": [
+    "utils",
+    "angular"
+  ],
+  "author": "Simon Menke",
+  "license": "MIT",
+  "devDependencies": {
+    "babel": "^5.4.7",
+    "browserify": "^10.2.3",
+    "exorcist": "^0.4.0"
+  },
+  "dependencies": {
+    "fd-angular-core": "0.x.x"
+  },
+  "jspm": {
+    "jspmNodeConversion": false,
+    "format": "es6",
+    "main": "src/index.js",
+    "dependencies": {
+      "fd-angular-core": "npm:fd-angular-core"
+    }
+  }
+}
