@@ -33,7 +33,8 @@ export class PagesController {
 
 function awaitStates() {
   return fetchSummaries()
-    .then(buildStates);
+    .then(buildStates)
+    .then(exportData);
 }
 
 function buildStates(data) {
@@ -64,6 +65,24 @@ function buildStates(data) {
     }
 
   }
+
+  return data;
+}
+
+export var Roots = null;
+export var Root  = null;
+export var I18n  = null;
+
+function exportData(data) {
+  I18n  = data.i18n;
+  Root  = data.pages["/"];
+  Roots = {};
+
+  for (let locale of data.i18n.locales) {
+    Roots[locale] = data.pages["/"+locale];
+  }
+
+  return data;
 }
 
 function lookupPageType(name) {

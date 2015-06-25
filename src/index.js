@@ -1,3 +1,3 @@
 import './Api';
-export {PagesController} from './States';
+export {PagesController, Roots, Root, I18n} from './States';
 export {Page} from './Page';
