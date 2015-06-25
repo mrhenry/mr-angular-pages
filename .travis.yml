@@ -1,3 +1,11 @@
 language: node_js
 node_js:
 - '0.12'
+deploy:
+  provider: npm
+  email: simon.menke@gmail.com
+  api_key:
+    secure: GhMQ2Aicc8SyL60lZZldiWJN3wsRVNyzhYVpLaBTQfUtTxCw+w0J8k3eC6f9OD6iV8WNxh0qNmr9Vq3v+lhvrVRPY4XfYZBpUpUjceliWzGj/7pZSZLM+gnnSOmLmC4ApPDy0JLnDRHhJIOGbqOsORMRuyo/caC7gUpHynWKyvhSqNhMUr/HDIg8FLqPpX9C6Ytg9Z0/wirpTIW7YVLeoKrVSjOiJD7SSDA2fGb6QhWixoV4tI+XpEqOJf5i9oLLs32jjtrz0KZ2WPf/XztHaFOJVsvC5M3Yu3MUqW5Obn2Ywd+BH/v2s1wsfwZf0bucdSDPxNbvbaQOkHpPx7Z1lur72AO3M/DyaOvAjmxj3Lp7UENvaeg7qobxXGJWXL17snNTBV9KtpTXBL6JwfLOPXkOuALFL9H1YUEXRWLuxpVJRQEVGWYjSkS5OrTf+itgCxkkStMtEGNzapRPw+oqkWxdJOVG6iq5UuLD82zUyuc9VdeSNOQhSwvQUSN7OLyEPFCKYxpRRwFwp2w1k7Pz8B9vpSfzrwUXM69w/0I8nS7vZBfBBQEi5UhEOonQuxw4q4SaUTKgmhoeVoEHIc644XIfRff264YiFZlnQ17o1z9s5vAJRZjlAWI57N0kRxe99H07b43HR6edbPTnWJw0rBEZ+sj0fxh6AOFdA/QNpbU=
+  on:
+    tags: true
+    repo: mrhenry/mr-angular-pages
