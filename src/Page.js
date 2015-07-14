@@ -5,17 +5,22 @@ export var registeredPageTypes = {};
 const DEFAULT_SUFFIX = 'Page';
 
 export function mountPage(page, url) {
-  let _this = this::mountAt(url);
+  return {
+    state:              this::mountAt(url),
+    page:               page,
+    name:               name,
+    buildUiRouterState: builder,
+  };
 
-  let resolve = Object.assign({}, _this.$$state.state.resolve);
-  _this.$$state.state.resolve = resolve;
-  _this.$$state.state.name = url;
-  _this.$$state.state.childStates = _this.$$state.state.childStates.concat([]);
+  function builder() {
+    let state = buildUiRouterState(this.state);
 
-  resolve.pageSummary = function resolvePageSummary() { return page; };
-  resolve.pageId      = function resolvePageId()      { return page.id; };
+    state.name = url;
+    state.resolve.pageSummary = () => { return this.page; }
+    state.resolve.pageId = () => { return this.page.id; }
 
-  return _this;
+    return state;
+  }
 }
 
 export function Page(opts) {
