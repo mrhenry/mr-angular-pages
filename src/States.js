@@ -1,35 +1,14 @@
 import {fetchSummaries} from './Api';
 import {registeredPageTypes, mountPage} from './Page';
-import {beforeBoot, State} from 'fd-angular-core';
+import {beforeBoot, State, Metadata} from 'fd-angular-core';
 
 beforeBoot(awaitStates());
 
-let states = [];
-
 @State({
   abstract: true,
-  children: states,
   template: `<ui-view></ui-view>`
 })
-export class PagesController {
-
-  constructor () {
-    console.log('[PagesController]', 'Constructor');
-  }
-
-  activate () {
-    console.log('[PagesController]', 'Activate', true);
-  }
-
-  attach () {
-    console.log('[PagesController]', 'Attach');
-  }
-
-  detach () {
-    console.log('[PagesController]', 'Detach');
-  }
-
-}
+export class PagesController {}
 
 function awaitStates() {
   return fetchSummaries()
@@ -39,29 +18,34 @@ function awaitStates() {
 
 function buildStates(data) {
   let keys = Object.keys(data.pages);
-  let stateIndex = {};
+  let stateIndex = {}, metaIndex = {};
+  let ctrlMeta = Metadata(PagesController);
   keys.sort();
 
   for (let path of keys) {
     let page = data.pages[path];
     let type = data::lookupPageType(page.type);
+    let meta = Metadata(type);
 
-    if (type.$$state.opts.asChild) {
-      let idx = path.lastIndexOf('/');
+    // find parent
+    let idx = path.lastIndexOf('/');
+    let parentPath  = path.slice(0, idx);
+    let childPath   = path.slice(idx);
+    if (parentPath === '') parentPath = '/';
+    let parentState = stateIndex[parentPath];
+    let parentMeta  = metaIndex[parentPath];
 
-      let parentPath = path.slice(0, idx);
-      let childPath  = path.slice(idx);
-
+    if (parentState && (meta.state.embed || parentMeta.state.embedChildren)) {
       let state = type::mountPage(page, childPath);
       stateIndex[path] = state;
-
-      let parent = stateIndex[parentPath];
-      parent.$$state.state.childStates.push(state);
+      metaIndex[path] = meta;
+      parentState.children.push(state);
 
     } else {
       let state = type::mountPage(page, path);
       stateIndex[path] = state;
-      states.push(state);
+      metaIndex[path] = meta;
+      ctrlMeta.state.children.push(state);
     }
 
   }

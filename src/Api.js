@@ -46,20 +46,26 @@ function makeTree(data) {
       _page.translations = undefined;
       _page.id = `${locale}/${page.id}`;
 
-      let translations;
+      let localeTranslations, defaultTranslations;
       for (let t of page.translations) {
         if (t.locale == locale) {
-          translations = t;
-          break;
+          localeTranslations = t;
         }
         if (t.locale == data.i18n.default) {
-          translations = t;
+          defaultTranslations = t;
         }
       }
-      for (let key of Object.keys(translations)) {
-        _page[key] = translations[key];
+      Object.assign(_page, defaultTranslations);
+      for (let key of Object.keys(localeTranslations)) {
+        let val = localeTranslations[key];
+        if (!!val) {
+          _page[key] = val;
+        }
       }
       _page.locale = locale;
+      if (!_page.long_title) {
+        _page.long_title = _page.title;
+      }
 
       if (page.parent_id) {
         _page.parent_id = `${locale}/${page.parent_id}`;
@@ -114,9 +120,11 @@ function makeTree(data) {
   };
 
   function makePath(page, prefix, acc, root) {
-    let path = page.path_component == '' ? prefix :
-               prefix == '/'             ? `/${page.path_component}` :
-               `${prefix}/${page.path_component}`;
+
+    let slug = pageSlug(page);
+    let path = slug == ''    ? prefix     :
+               prefix == '/' ? `/${slug}` :
+               `${prefix}/${slug}`;
 
     if (!root) root = page;
 
@@ -133,5 +141,15 @@ function makeTree(data) {
     let posa = (a.position || 0);
     let posb = (b.position || 0);
     return posa - posb;
+  }
+
+  function pageSlug(page) {
+    if (typeof page.path_component === 'string') {
+      return page.path_component;
+    }
+    if (typeof page.static_uuid === 'string') {
+      return page.static_uuid;
+    }
+    return "";
   }
 }
