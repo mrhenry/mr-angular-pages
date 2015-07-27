@@ -64,7 +64,8 @@ function makeTree(data) {
           _page.translations = undefined;
           _page.id = locale + '/' + page.id;
 
-          var translations = undefined;
+          var localeTranslations = undefined,
+              defaultTranslations = undefined;
           var _iteratorNormalCompletion7 = true;
           var _didIteratorError7 = false;
           var _iteratorError7 = undefined;
@@ -74,11 +75,10 @@ function makeTree(data) {
               var t = _step7.value;
 
               if (t.locale == locale) {
-                translations = t;
-                break;
+                localeTranslations = t;
               }
               if (t.locale == data.i18n['default']) {
-                translations = t;
+                defaultTranslations = t;
               }
             }
           } catch (err) {
@@ -96,15 +96,19 @@ function makeTree(data) {
             }
           }
 
+          Object.assign(_page, defaultTranslations);
           var _iteratorNormalCompletion8 = true;
           var _didIteratorError8 = false;
           var _iteratorError8 = undefined;
 
           try {
-            for (var _iterator8 = Object.keys(translations)[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
+            for (var _iterator8 = Object.keys(localeTranslations)[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
               var key = _step8.value;
 
-              _page[key] = translations[key];
+              var val = localeTranslations[key];
+              if (!!val) {
+                _page[key] = val;
+              }
             }
           } catch (err) {
             _didIteratorError8 = true;
@@ -122,6 +126,9 @@ function makeTree(data) {
           }
 
           _page.locale = locale;
+          if (!_page.long_title) {
+            _page.long_title = _page.title;
+          }
 
           if (page.parent_id) {
             _page.parent_id = locale + '/' + page.parent_id;
@@ -291,7 +298,9 @@ function makeTree(data) {
   };
 
   function makePath(page, prefix, acc, root) {
-    var path = page.path_component == '' ? prefix : prefix == '/' ? '/' + page.path_component : prefix + '/' + page.path_component;
+
+    var slug = pageSlug(page);
+    var path = slug == '' ? prefix : prefix == '/' ? '/' + slug : prefix + '/' + slug;
 
     if (!root) root = page;
 
@@ -330,13 +339,23 @@ function makeTree(data) {
     var posb = b.position || 0;
     return posa - posb;
   }
+
+  function pageSlug(page) {
+    if (typeof page.path_component === 'string') {
+      return page.path_component;
+    }
+    if (typeof page.static_uuid === 'string') {
+      return page.static_uuid;
+    }
+    return '';
+  }
 }
 
 },{"fd-angular-core":undefined}],2:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
-  value: true
+	value: true
 });
 exports.mountPage = mountPage;
 exports.Page = Page;
@@ -349,105 +368,146 @@ exports.registeredPageTypes = registeredPageTypes;
 var DEFAULT_SUFFIX = 'Page';
 
 function mountPage(page, url) {
-  var _this = _fdAngularCore.mountAt.call(this, url);
+	var opts = arguments[2] === undefined ? {} : arguments[2];
+	var name = opts.name;
 
-  var resolve = Object.assign({}, _this.$$state.state.resolve);
-  _this.$$state.state.resolve = resolve;
-  _this.$$state.state.name = url;
-  _this.$$state.state.childStates = _this.$$state.state.childStates.concat([]);
+	return {
+		state: _fdAngularCore.mountAt.call(this, url, { name: name || url }),
+		page: page,
+		children: [],
+		buildUiRouterState: builder
+	};
 
-  resolve.pageSummary = function resolvePageSummary() {
-    return page;
-  };
-  resolve.pageId = function resolvePageId() {
-    return page.id;
-  };
+	function builder() {
+		var _this = this;
 
-  return _this;
+		var state = (0, _fdAngularCore.buildUiRouterState)(this.state);
+
+		state.resolve.pageSummary = function () {
+			return _this.page;
+		};
+		state.resolve.pageId = function () {
+			return _this.page.id;
+		};
+
+		var _iteratorNormalCompletion = true;
+		var _didIteratorError = false;
+		var _iteratorError = undefined;
+
+		try {
+			for (var _iterator = this.children[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+				var child = _step.value;
+
+				state.children.push((0, _fdAngularCore.buildUiRouterState)(child));
+			}
+		} catch (err) {
+			_didIteratorError = true;
+			_iteratorError = err;
+		} finally {
+			try {
+				if (!_iteratorNormalCompletion && _iterator['return']) {
+					_iterator['return']();
+				}
+			} finally {
+				if (_didIteratorError) {
+					throw _iteratorError;
+				}
+			}
+		}
+
+		return state;
+	}
 }
 
-function Page(opts) {
-  if (opts.url) {
-    throw '@Page({ url }) is not supported';
-  }
-  if (opts.abstract) {
-    throw '@Page({ abstract }) is not supported';
-  }
-  if (opts.resolve) {
-    throw '@Page({ resolve }) is not supported';
-  }
+function Page() {
+	var opts = arguments[0] === undefined ? {} : arguments[0];
 
-  function register(constructor) {
+	if (opts.url) {
+		throw '@Page({ url }) is not supported';
+	}
+	if (opts.resolve) {
+		throw '@Page({ resolve }) is not supported';
+	}
 
-    var name = opts.name;
-    if (!name) {
-      name = funcName(constructor);
-      name = name[0].toLowerCase() + name.substr(1, name.length - DEFAULT_SUFFIX.length - 1);
-      opts.name = name;
-    }
+	if (opts.asChild !== undefined) {
+		console.warn('@Page({ asChild }) is depricated use @Page({ embed }) instead.');
+		opts.embed = opts.asChild;
+	}
 
-    function wrappedConstructor(pageSummary, pageDetails) {
-      applyPageSummary.call(this, pageSummary);
-      applyPageDetails.call(this, pageDetails);
+	function register(constructor) {
+		var meta = (0, _fdAngularCore.Metadata)(constructor);
 
-      for (var _len = arguments.length, rest = Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
-        rest[_key - 2] = arguments[_key];
-      }
+		var name = opts.name;
+		if (!name) {
+			name = meta.name;
+			name = name[0].toLowerCase() + name.substr(1, name.length - DEFAULT_SUFFIX.length - 1);
+			opts.name = name;
+		}
 
-      constructor.apply(this, rest);
-    }
-    wrappedConstructor = funcRename(funcName(constructor), wrappedConstructor);
-    wrappedConstructor.$inject = ['pageSummary', 'pageDetails'].concat(constructor.$inject || []);
-    wrappedConstructor.prototype = constructor.prototype;
+		constructor = (0, _fdAngularCore.State)(opts)(constructor) || constructor;
 
-    opts.resolve = { pageDetails: loadPageDetails };
+		var pageConstructor = function pageConstructor(pageSummary, pageDetails) {
+			applyPageSummary.call(this, pageSummary);
+			applyPageDetails.call(this, pageDetails);
 
-    (0, _fdAngularCore.State)(opts)(wrappedConstructor);
-    registeredPageTypes[funcName(wrappedConstructor)] = wrappedConstructor;
-  }
+			for (var _len = arguments.length, rest = Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+				rest[_key - 2] = arguments[_key];
+			}
 
-  function loadPageDetails($http, pageId) {
-    return $http.get('/api/pages/' + pageId + '.json').then(function (x) {
-      return x.data;
-    });
-  }
-  loadPageDetails.$inject = ['$http', 'pageId'];
+			constructor.apply(this, rest);
+		};
+		pageConstructor = meta.wrap(pageConstructor);
+		pageConstructor.$inject = ['pageSummary', 'pageDetails'].concat(constructor.$inject || []);
 
-  function applyPageSummary(data) {
-    this.$pageSummary = data;
-    Object.assign(this, data);
-  }
+		var superMeta = (0, _fdAngularCore.Metadata)(meta.superClass) || { state: {} };
 
-  function applyPageDetails(data) {
-    this.$pageDetails = data;
-    Object.assign(this, data);
-  }
+		if (opts.embed === true || opts.embed === false) {
+			meta.state.embed = opts.embed;
+		} else {
+			meta.state.embed = superMeta.state.embed || false;
+		}
 
-  return register;
-}
+		if (opts.embedChildren === true || opts.embedChildren === false) {
+			meta.state.embedChildren = opts.embedChildren;
+		} else {
+			meta.state.embedChildren = superMeta.state.embedChildren || false;
+		}
 
-function funcName(f) {
-  var name = f && f.name || null;
+		meta.state.resolve.pageDetails = loadPageDetails;
+		meta.state.resolve.pageSummary = function () {};
+		meta.state.resolve.pageId = function () {};
 
-  if (name === null) {
-    name = f.toString().match(/^function\s*([^\s(]+)/)[1];
-  }
+		registeredPageTypes[meta.name] = pageConstructor;
+		return constructor;
+	}
 
-  return name;
-}
+	function loadPageDetails($http, pageId) {
+		return $http.get('/api/pages/' + pageId + '.json').then(function (x) {
+			return x.data;
+		});
+	}
+	loadPageDetails.$inject = ['$http', 'pageId'];
 
-function funcRename(name, fn) {
-  return new Function('return function (call) { return function ' + name + ' () { return call(this, arguments) }; };')()(Function.apply.bind(fn));
+	function applyPageSummary(data) {
+		this.$pageSummary = data;
+		Object.assign(this, data);
+		this.type = data.type;
+	}
+
+	function applyPageDetails(data) {
+		this.$pageDetails = data;
+		Object.assign(this, data);
+	}
+
+	return register;
 }
 
 },{"fd-angular-core":undefined}],3:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
-  value: true
+	value: true
 });
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
@@ -459,97 +519,99 @@ var _fdAngularCore = require('fd-angular-core');
 
 (0, _fdAngularCore.beforeBoot)(awaitStates());
 
-var states = [];
-
 var PagesController = (function () {
-  function PagesController() {
-    _classCallCheck(this, _PagesController);
+	function PagesController() {
+		_classCallCheck(this, _PagesController);
+	}
 
-    console.log('[PagesController]', 'Constructor');
-  }
-
-  var _PagesController = PagesController;
-
-  _createClass(_PagesController, [{
-    key: 'activate',
-    value: function activate() {
-      console.log('[PagesController]', 'Activate', true);
-    }
-  }, {
-    key: 'attach',
-    value: function attach() {
-      console.log('[PagesController]', 'Attach');
-    }
-  }, {
-    key: 'detach',
-    value: function detach() {
-      console.log('[PagesController]', 'Detach');
-    }
-  }]);
-
-  PagesController = (0, _fdAngularCore.State)({
-    abstract: true,
-    children: states,
-    template: '<ui-view></ui-view>'
-  })(PagesController) || PagesController;
-  return PagesController;
+	var _PagesController = PagesController;
+	PagesController = (0, _fdAngularCore.State)({
+		abstract: true,
+		template: '<ui-view></ui-view>'
+	})(PagesController) || PagesController;
+	return PagesController;
 })();
 
 exports.PagesController = PagesController;
 
 function awaitStates() {
-  return (0, _Api.fetchSummaries)().then(buildStates).then(exportData);
+	return (0, _Api.fetchSummaries)().then(buildStates).then(exportData);
 }
 
 function buildStates(data) {
-  var keys = Object.keys(data.pages);
-  var stateIndex = {};
-  keys.sort();
+	var keys = Object.keys(data.pages);
+	var stateIndex = {},
+	    metaIndex = {},
+	    closestParentIndex = {};
+	var ctrlMeta = (0, _fdAngularCore.Metadata)(PagesController);
+	keys.sort();
 
-  var _iteratorNormalCompletion = true;
-  var _didIteratorError = false;
-  var _iteratorError = undefined;
+	var _iteratorNormalCompletion = true;
+	var _didIteratorError = false;
+	var _iteratorError = undefined;
 
-  try {
-    for (var _iterator = keys[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-      var path = _step.value;
+	try {
+		for (var _iterator = keys[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+			var path = _step.value;
 
-      var page = data.pages[path];
-      var type = lookupPageType.call(data, page.type);
+			var page = data.pages[path];
+			var type = lookupPageType.call(data, page.type);
+			var meta = (0, _fdAngularCore.Metadata)(type);
 
-      if (type.$$state.opts.asChild) {
-        var idx = path.lastIndexOf('/');
+			// find parent
+			var idx = path.lastIndexOf('/');
+			var parentPath = path.slice(0, idx);
+			var childPath = path.slice(idx);
+			if (parentPath === '') {
+				parentPath = '/';
+			}
 
-        var parentPath = path.slice(0, idx);
-        var childPath = path.slice(idx);
+			var parentState = stateIndex[parentPath];
+			var parentMeta = metaIndex[parentPath];
 
-        var state = _Page.mountPage.call(type, page, childPath);
-        stateIndex[path] = state;
+			if (parentState && (meta.state.embed || parentMeta.state.embedChildren)) {
+				var state = _Page.mountPage.call(type, page, childPath);
+				stateIndex[path] = state;
+				metaIndex[path] = meta;
+				closestParentIndex[path] = parentPath;
+				console.log('Page[%s] %o', path, state);
+				parentState.children.push(state);
+			} else if (closestParentIndex[parentPath]) {
+				var closestParentPath = closestParentIndex[parentPath];
+				parentState = stateIndex[closestParentPath];
+				childPath = path.slice(closestParentPath.length);
 
-        var _parent = stateIndex[parentPath];
-        _parent.$$state.state.childStates.push(state);
-      } else {
-        var state = _Page.mountPage.call(type, page, path);
-        stateIndex[path] = state;
-        states.push(state);
-      }
-    }
-  } catch (err) {
-    _didIteratorError = true;
-    _iteratorError = err;
-  } finally {
-    try {
-      if (!_iteratorNormalCompletion && _iterator['return']) {
-        _iterator['return']();
-      }
-    } finally {
-      if (_didIteratorError) {
-        throw _iteratorError;
-      }
-    }
-  }
+				var state = _Page.mountPage.call(type, page, childPath);
+				stateIndex[path] = state;
+				metaIndex[path] = meta;
 
-  return data;
+				closestParentIndex[path] = closestParentPath;
+				console.log('Page[%s] %o', path, state);
+				parentState.children.push(state);
+			} else {
+				var state = _Page.mountPage.call(type, page, path);
+				stateIndex[path] = state;
+				metaIndex[path] = meta;
+				console.log('Page[%s] %o', path, state);
+				ctrlMeta.state.children.push(state);
+			}
+		}
+	} catch (err) {
+		_didIteratorError = true;
+		_iteratorError = err;
+	} finally {
+		try {
+			if (!_iteratorNormalCompletion && _iterator['return']) {
+				_iterator['return']();
+			}
+		} finally {
+			if (_didIteratorError) {
+				throw _iteratorError;
+			}
+		}
+	}
+
+	return data;
 }
 
 var Roots = null;
@@ -560,52 +622,54 @@ var I18n = null;
 
 exports.I18n = I18n;
 function exportData(data) {
-  exports.I18n = I18n = data.i18n;
-  exports.Root = Root = data.pages['/'];
-  exports.Roots = Roots = {};
+	exports.I18n = I18n = data.i18n;
+	exports.Root = Root = data.pages['/'];
+	exports.Roots = Roots = {};
 
-  var _iteratorNormalCompletion2 = true;
-  var _didIteratorError2 = false;
-  var _iteratorError2 = undefined;
+	var _iteratorNormalCompletion2 = true;
+	var _didIteratorError2 = false;
+	var _iteratorError2 = undefined;
 
-  try {
-    for (var _iterator2 = data.i18n.locales[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-      var locale = _step2.value;
+	try {
+		for (var _iterator2 = data.i18n.locales[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+			var locale = _step2.value;
 
-      Roots[locale] = data.pages['/' + locale];
-    }
-  } catch (err) {
-    _didIteratorError2 = true;
-    _iteratorError2 = err;
-  } finally {
-    try {
-      if (!_iteratorNormalCompletion2 && _iterator2['return']) {
-        _iterator2['return']();
-      }
-    } finally {
-      if (_didIteratorError2) {
-        throw _iteratorError2;
-      }
-    }
-  }
+			Roots[locale] = data.pages['/' + locale];
+		}
+	} catch (err) {
+		_didIteratorError2 = true;
+		_iteratorError2 = err;
+	} finally {
+		try {
+			if (!_iteratorNormalCompletion2 && _iterator2['return']) {
+				_iterator2['return']();
+			}
+		} finally {
+			if (_didIteratorError2) {
+				throw _iteratorError2;
+			}
+		}
+	}
 
-  return data;
+	return data;
 }
 
 function lookupPageType(name) {
-  var missing = [];
+	var missing = [];
 
-  while (true) {
-    var type = _Page.registeredPageTypes[name];
-    if (type) return type;
+	while (true) {
+		var type = _Page.registeredPageTypes[name];
+		if (type) {
+			return type;
+		}
 
-    missing.push(name);
+		missing.push(name);
 
-    name = this.types[name];
-    if (!name) {
-      throw Error('Unknown page types: ' + missing.join(', '));
-    }
-  }
+		name = this.types[name];
+		if (!name) {
+			throw Error('Unknown page types: ' + missing.join(', '));
+		}
+	}
 }
 
 },{"./Api":1,"./Page":2,"fd-angular-core":undefined}],4:[function(require,module,exports){
@@ -653,6 +717,111 @@ Object.defineProperty(exports, 'Page', {
   }
 });
 
-},{"./Api":1,"./Page":2,"./States":3}]},{},[4])(4)
+var _search = require('./search');
+
+Object.defineProperty(exports, 'find', {
+  enumerable: true,
+  get: function get() {
+    return _search.find;
+  }
+});
+Object.defineProperty(exports, 'findFirst', {
+  enumerable: true,
+  get: function get() {
+    return _search.findFirst;
+  }
+});
+
+},{"./Api":1,"./Page":2,"./States":3,"./search":5}],5:[function(require,module,exports){
+
+/*
+ * @param {Object} query
+ * @param {Integer} query.limit
+ * @param {String} query.type
+ */
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.find = find;
+exports.findFirst = findFirst;
+
+function find(query) {
+  var acc = arguments[1] === undefined ? [] : arguments[1];
+
+  if (this.$pageSummary) {
+    var _context;
+
+    return (_context = this.$pageSummary, find).call(_context, query, acc);
+  }
+
+  if (!query) {
+    return acc;
+  }
+
+  if (query.limit && acc.length >= query.limit) {
+    return acc;
+  }
+
+  if (query.type && query.type !== this.type) {
+    return findInChildren.call(this, query, acc);
+  }
+
+  acc.push(this);
+  return findInChildren.call(this, query, acc);
+}
+
+/*
+ * @param {Object} query
+ * @param {String} query.type
+ */
+
+function findFirst(query) {
+
+  if (!query) {
+    return null;
+  }
+
+  query.limit = 1;
+  var res = find.call(this, query);
+
+  return res[0] || null;
+}
+
+function findInChildren(query, acc) {
+  if (!this.children) {
+    return acc;
+  }
+
+  var _iteratorNormalCompletion = true;
+  var _didIteratorError = false;
+  var _iteratorError = undefined;
+
+  try {
+    for (var _iterator = this.children[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      var child = _step.value;
+
+      acc = find.call(child, query, acc);
+    }
+  } catch (err) {
+    _didIteratorError = true;
+    _iteratorError = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion && _iterator["return"]) {
+        _iterator["return"]();
+      }
+    } finally {
+      if (_didIteratorError) {
+        throw _iteratorError;
+      }
+    }
+  }
+
+  return acc;
+}
+
+},{}]},{},[4])(4)
 });
 //# sourceMappingURL=mr-angular-pages.js.map
