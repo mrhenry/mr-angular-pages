@@ -1,6 +1,7 @@
 import {fetchSummaries} from './Api';
 import {registeredPageTypes, mountPage} from './Page';
 import {beforeBoot, State, Metadata} from 'fd-angular-core';
+import {runPreprocessors} from './preprocess';
 
 beforeBoot(awaitStates());
 
@@ -12,8 +13,21 @@ export class PagesController {}
 
 function awaitStates() {
 	return fetchSummaries()
+		.then(preprocess)
 		.then(buildStates)
 		.then(exportData);
+}
+
+function preprocess(data) {
+	let q = [
+		runPreprocessors(data.pages["/"]),
+	];
+
+	for (let locale of data.i18n.locales) {
+		q.push(runPreprocessors(data.pages["/" + locale]));
+	}
+
+	return Promise.all(q).then(() => data);
 }
 
 function buildStates(data) {
@@ -21,6 +35,8 @@ function buildStates(data) {
 	let stateIndex = {}, metaIndex = {}, closestParentIndex = {};
 	let ctrlMeta = Metadata(PagesController);
 	keys.sort();
+
+	console.groupCollapsed("Pages");
 
 	for (let path of keys) {
 		let page = data.pages[path];
@@ -41,7 +57,7 @@ function buildStates(data) {
 			stateIndex[path] = state;
 			metaIndex[path] = meta;
 			closestParentIndex[path] = parentPath;
-			console.log("Page[%s] %o", path, state);
+			console.log("Page[%s] %o", path, page);
 			parentState.children.push(state);
 
 		} else if (closestParentIndex[parentPath]) {
@@ -54,18 +70,20 @@ function buildStates(data) {
 			metaIndex[path] = meta;
 
 			closestParentIndex[path] = closestParentPath;
-			console.log("Page[%s] %o", path, state);
+			console.log("Page[%s] %o", path, page);
 			parentState.children.push(state);
 
 		} else {
 			let state = type::mountPage(page, path);
 			stateIndex[path] = state;
 			metaIndex[path] = meta;
-			console.log("Page[%s] %o", path, state);
+			console.log("Page[%s] %o", path, page);
 			ctrlMeta.state.children.push(state);
 		}
 
 	}
+
+	console.groupEnd();
 
 	return data;
 }
@@ -88,18 +106,18 @@ function exportData(data) {
 
 function lookupPageType(name) {
 	let missing = [];
+	let type = registeredPageTypes[name];
 
-	while (true) {
-		let type = registeredPageTypes[name];
-		if (type) {
-			return type;
-		}
-
+	while (!type) {
 		missing.push(name);
 
 		name = this.types[name];
 		if (!name) {
 			throw Error("Unknown page types: " + missing.join(', '));
 		}
+
+		type = registeredPageTypes[name];
 	}
+
+	return type;
 }
