@@ -1,7 +1,23 @@
 
 
 /**
-@param {Function} func - func is called with each page in the tree
+PQ is a simple library for dealing with a page tree.
+
+@namespace pq
+*/
+
+/**
+Visit all the child pages.
+
+@function visit
+@memberof pq
+@param {visitCallback} func - func is called with each page in the tree
+@returns {Promise}
+*/
+/**
+@callback visitCallback
+@param {Object} page
+@returns {(Promise|false|undefined)}
 */
 export function visit(func) {
 	let p = new Promise((resolve, reject) => {
@@ -33,10 +49,16 @@ export function visit(func) {
 }
 
 /**
- * @param {Object} query
- * @param {Integer} query.limit
- * @param {String} query.type
- */
+Find all pages matching a query.
+
+@function find
+@memberof pq
+
+@param {Object} query
+@param {Integer} query.limit
+@param {String} query.type
+@returns {Object[]}
+*/
 export function find(query, acc=[]) {
 
 	if (this.$pageSummary) {
@@ -62,9 +84,15 @@ export function find(query, acc=[]) {
 
 
 /**
- * @param {Object} query
- * @param {String} query.type
- */
+Find the first page matching a query.
+
+@function findFirst
+@memberof pq
+
+@param {Object} query
+@param {String} query.type
+@returns {Object}
+*/
 export function findFirst(query) {
 
 	if (!query) {

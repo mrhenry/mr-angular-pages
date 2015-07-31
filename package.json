@@ -6,6 +6,7 @@
   "main": "lib/index.js",
   "scripts": {
     "test": "echo 'No tests...'",
+    "deploy-doc": "make deploy",
     "build": "make"
   },
   "keywords": [
@@ -19,17 +20,20 @@
     "babel-eslint": "^4.0.5",
     "browserify": "^10.2.3",
     "eslint": "^0.24.1",
-    "exorcist": "^0.4.0"
+    "exorcist": "^0.4.0",
+    "jsdoc": "^3.3.2"
   },
   "dependencies": {
-    "fd-angular-core": "0.x.x"
+    "fd-angular-core": "0.x.x",
+    "mr-util": "0.x.x"
   },
   "jspm": {
     "jspmNodeConversion": false,
     "format": "es6",
     "main": "src/index.js",
     "dependencies": {
-      "fd-angular-core": "npm:fd-angular-core"
+      "fd-angular-core": "npm:fd-angular-core",
+      "mr-util": "npm:mr-util"
     }
   }
 }

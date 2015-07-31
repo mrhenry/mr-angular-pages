@@ -1,3 +1,4 @@
+import 'mr-util';
 import {fetchSummaries} from './Api';
 import {registeredPageTypes, mountPage} from './Page';
 import {beforeBoot, State, Metadata} from 'fd-angular-core';
@@ -5,6 +6,12 @@ import {runPreprocessors} from './preprocess';
 
 beforeBoot(awaitStates());
 
+/**
+PagesController holds all the Lalala pages. Include this state
+to mount all the child pages.
+
+@class PagesController
+*/
 @State({
 	abstract: true,
 	template: `<ui-view></ui-view>`,
@@ -88,8 +95,37 @@ function buildStates(data) {
 	return data;
 }
 
+/**
+Roots is a map of all the root pages by their locale.
+
+@member Roots
+*/
 export var Roots = null;
+
+/**
+Root is the root pages according to the current locale.
+
+@member Root
+*/
 export var Root = null;
+
+/**
+I18n holds information about the available locales.
+
+@namespace I18n
+*/
+/**
+@var {string} current
+@memberof I18n
+*/
+/**
+@var {string} default
+@memberof I18n
+*/
+/**
+@var {string[]} locales
+@memberof I18n
+*/
 export var I18n = null;
 
 function exportData(data) {

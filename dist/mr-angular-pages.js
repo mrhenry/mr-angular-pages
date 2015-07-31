@@ -443,6 +443,28 @@ function mountPage(page, url) {
 	}
 }
 
+/**
+@function Page
+@param {Object}  opts - The options
+@param {string}  [opts.name] - The name of the controller.
+@param {string}  [opts.bindTo] - Bind the controller to the provided name.
+@param {Boolean} [opts.abstract] - True for abstract states.
+@param {Boolean} [opts.embed] - Embed this page as a child state in it's parent page.
+@param {Boolean} [opts.embedChildren] - Embed the child pages of this pages as child states.
+@param {string}  [opts.template] - An angular template.
+@param {string}  [opts.templateUrl] - A URL to an angular template.
+@param {State[]} [opts.children] - List of child states.
+@param {string}  [opts.controllerName] - The name of the controller as seen by angular.
+@param {Object}  [opts.views] - State views
+
+@example
+[@]Page({
+	template: `<h1>Hello World</h1>`,
+})
+class HomePage {
+}
+*/
+
 function Page() {
 	var opts = arguments[0] === undefined ? {} : arguments[0];
 
@@ -535,6 +557,8 @@ Object.defineProperty(exports, '__esModule', {
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
+require('mr-util');
+
 var _Api = require('./Api');
 
 var _Page = require('./Page');
@@ -544,6 +568,13 @@ var _fdAngularCore = require('fd-angular-core');
 var _preprocess = require('./preprocess');
 
 (0, _fdAngularCore.beforeBoot)(awaitStates());
+
+/**
+PagesController holds all the Lalala pages. Include this state
+to mount all the child pages.
+
+@class PagesController
+*/
 
 var PagesController = (function () {
 	function PagesController() {
@@ -677,10 +708,39 @@ function buildStates(data) {
 	return data;
 }
 
+/**
+Roots is a map of all the root pages by their locale.
+
+@member Roots
+*/
 var Roots = null;
+
 exports.Roots = Roots;
+/**
+Root is the root pages according to the current locale.
+
+@member Root
+*/
 var Root = null;
+
 exports.Root = Root;
+/**
+I18n holds information about the available locales.
+
+@namespace I18n
+*/
+/**
+@var {string} current
+@memberof I18n
+*/
+/**
+@var {string} default
+@memberof I18n
+*/
+/**
+@var {string[]} locales
+@memberof I18n
+*/
 var I18n = null;
 
 exports.I18n = I18n;
@@ -735,7 +795,7 @@ function lookupPageType(name) {
 	return type;
 }
 
-},{"./Api":1,"./Page":2,"./preprocess":5,"fd-angular-core":undefined}],4:[function(require,module,exports){
+},{"./Api":1,"./Page":2,"./preprocess":5,"fd-angular-core":undefined,"mr-util":undefined}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -810,6 +870,20 @@ var _query = require('./query');
 
 var preprocessors = [];
 
+/**
+Callbacks passed to preprocess are executed before the page-state tree is build.
+The callback is called with each root page.
+
+@function preprocess
+@param {preprocessCallback} func
+@returns {Promise}
+*/
+/**
+@callback preprocessCallback
+@param {Object} page
+@returns {?Promise}
+*/
+
 function preprocess(func) {
 	preprocessors.push(func);
 }
@@ -850,7 +924,23 @@ preprocess(function addDepthToPages(root) {
 
 
 /**
-@param {Function} func - func is called with each page in the tree
+PQ is a simple library for dealing with a page tree.
+
+@namespace pq
+*/
+
+/**
+Visit all the child pages.
+
+@function visit
+@memberof pq
+@param {visitCallback} func - func is called with each page in the tree
+@returns {Promise}
+*/
+/**
+@callback visitCallback
+@param {Object} page
+@returns {(Promise|false|undefined)}
 */
 "use strict";
 
@@ -916,10 +1006,16 @@ function visit(func) {
 }
 
 /**
- * @param {Object} query
- * @param {Integer} query.limit
- * @param {String} query.type
- */
+Find all pages matching a query.
+
+@function find
+@memberof pq
+
+@param {Object} query
+@param {Integer} query.limit
+@param {String} query.type
+@returns {Object[]}
+*/
 
 function find(query) {
 	var acc = arguments[1] === undefined ? [] : arguments[1];
@@ -947,9 +1043,15 @@ function find(query) {
 }
 
 /**
- * @param {Object} query
- * @param {String} query.type
- */
+Find the first page matching a query.
+
+@function findFirst
+@memberof pq
+
+@param {Object} query
+@param {String} query.type
+@returns {Object}
+*/
 
 function findFirst(query) {
 

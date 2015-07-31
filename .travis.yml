@@ -1,6 +1,10 @@
 language: node_js
 node_js:
 - '0.12'
+script: |
+  npm run-script build
+  npm test
+  npm run-script deploy-doc
 deploy:
   provider: npm
   email: simon.menke@gmail.com
@@ -9,3 +13,6 @@ deploy:
   on:
     tags: true
     repo: mrhenry/mr-angular-pages
+env:
+  global:
+    secure: jdyoXjnfTr3gkhC6A3T8FdcqVNu1RTbG+VOngQAPDpvmC9VhLPBu8W3fqjjGJtlhvlhXopnLlwrqLKeXfqwe4IWPcLxPPkO2jbC80pRhLI/ranvOwAtZ/RR7TaLCyux9QCaCY2EQ7LWpj85YUSezwYFc8buwDIiuQBW4QRqUqCW3SBCQ8Uuvek/L/ARcnkikxI96PTAKZwHeuh8pnVfTpsLxGnrHrRHxzk/r9FpN0UZC/lbdsu3IiLoL25O3ZxqBAepeQy7wSXpYdjKZS5bdxTS1xHZlmLQ1TgVtcORaVxkVNqcvCLhwVAR/RV/Kmv8P1BrNe8eTSjwCfvzrhTkLBbgeUNBu6FNjTMxcxoni7V5v4bhjTZn7MkeEI+PjVwUaBwLE2DrAOn58dHPzIdQbPswec7NTyRJXic9xzcZufz48l8Rmi1fepQnzPP/VyoZlhWLxObTGM1Z8sG7JmrlALExSBNBU8VWj9LziVczp7wo1kTGz9cmazKoe610D3AbTkzeduVuMKe5TOXXVI6YjEwlDhc1oB+bCYEQu2/jUt3xONxywFjEmigBavd6I1ejYKky2icmdxZenCgMukt4XjcZCanoccwpOLxefgKdW5zb/JRu6AHflI2zVa10StZPjDvwiNbfGUIldvLPJB1Rk3i+MVlFrVSL9kXZXigYPwsc=

@@ -2,6 +2,19 @@ import {visit} from './query';
 
 let preprocessors = [];
 
+/**
+Callbacks passed to preprocess are executed before the page-state tree is build.
+The callback is called with each root page.
+
+@function preprocess
+@param {preprocessCallback} func
+@returns {Promise}
+*/
+/**
+@callback preprocessCallback
+@param {Object} page
+@returns {?Promise}
+*/
 export function preprocess(func) {
 	preprocessors.push(func);
 }
