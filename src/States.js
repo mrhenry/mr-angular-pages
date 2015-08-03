@@ -14,6 +14,7 @@ to mount all the child pages.
 */
 @State({
 	abstract: true,
+	hidden:   true,
 	template: `<ui-view></ui-view>`,
 })
 export class PagesController {}
@@ -60,7 +61,7 @@ function buildStates(data) {
 		let parentMeta = metaIndex[parentPath];
 
 		if (parentState && (meta.state.embed || parentMeta.state.embedChildren)) {
-			let state = type::mountPage(page, childPath);
+			let state = type::mountPage(page, childPath, { name: path });
 			stateIndex[path] = state;
 			metaIndex[path] = meta;
 			closestParentIndex[path] = parentPath;
@@ -72,7 +73,7 @@ function buildStates(data) {
 			parentState = stateIndex[closestParentPath];
 			childPath = path.slice(closestParentPath.length);
 
-			let state = type::mountPage(page, childPath);
+			let state = type::mountPage(page, childPath, { name: path });
 			stateIndex[path] = state;
 			metaIndex[path] = meta;
 
@@ -81,7 +82,7 @@ function buildStates(data) {
 			parentState.children.push(state);
 
 		} else {
-			let state = type::mountPage(page, path);
+			let state = type::mountPage(page, path, { name: path });
 			stateIndex[path] = state;
 			metaIndex[path] = meta;
 			console.log("Page[%s] %o", path, page);

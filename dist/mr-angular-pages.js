@@ -392,7 +392,7 @@ exports.registeredPageTypes = registeredPageTypes;
 var DEFAULT_SUFFIX = 'Page';
 
 function mountPage(page, url) {
-	var opts = arguments[2] === undefined ? {} : arguments[2];
+	var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 	var name = opts.name;
 
 	return {
@@ -407,6 +407,7 @@ function mountPage(page, url) {
 
 		var state = (0, _fdAngularCore.buildUiRouterState)(this.state);
 
+		state.absoluteName = true;
 		state.resolve.pageSummary = function () {
 			return _this.page;
 		};
@@ -466,7 +467,7 @@ class HomePage {
 */
 
 function Page() {
-	var opts = arguments[0] === undefined ? {} : arguments[0];
+	var opts = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
 	if (opts.url) {
 		throw '@Page({ url }) is not supported';
@@ -584,6 +585,7 @@ var PagesController = (function () {
 	var _PagesController = PagesController;
 	PagesController = (0, _fdAngularCore.State)({
 		abstract: true,
+		hidden: true,
 		template: '<ui-view></ui-view>'
 	})(PagesController) || PagesController;
 	return PagesController;
@@ -662,7 +664,7 @@ function buildStates(data) {
 			var parentMeta = metaIndex[parentPath];
 
 			if (parentState && (meta.state.embed || parentMeta.state.embedChildren)) {
-				var state = _Page.mountPage.call(type, page, childPath);
+				var state = _Page.mountPage.call(type, page, childPath, { name: path });
 				stateIndex[path] = state;
 				metaIndex[path] = meta;
 				closestParentIndex[path] = parentPath;
@@ -673,7 +675,7 @@ function buildStates(data) {
 				parentState = stateIndex[closestParentPath];
 				childPath = path.slice(closestParentPath.length);
 
-				var state = _Page.mountPage.call(type, page, childPath);
+				var state = _Page.mountPage.call(type, page, childPath, { name: path });
 				stateIndex[path] = state;
 				metaIndex[path] = meta;
 
@@ -681,7 +683,7 @@ function buildStates(data) {
 				console.log('Page[%s] %o', path, page);
 				parentState.children.push(state);
 			} else {
-				var state = _Page.mountPage.call(type, page, path);
+				var state = _Page.mountPage.call(type, page, path, { name: path });
 				stateIndex[path] = state;
 				metaIndex[path] = meta;
 				console.log('Page[%s] %o', path, page);
@@ -894,7 +896,7 @@ function runPreprocessors(root) {
 
 // Run functions returning promises sequentialy
 function seq(funcs) {
-	var idx = arguments[1] === undefined ? 0 : arguments[1];
+	var idx = arguments.length <= 1 || arguments[1] === undefined ? 0 : arguments[1];
 
 	var target = this;
 	if (!target.then) {
@@ -1018,7 +1020,7 @@ Find all pages matching a query.
 */
 
 function find(query) {
-	var acc = arguments[1] === undefined ? [] : arguments[1];
+	var acc = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
 
 	if (this.$pageSummary) {
 		var _context;
