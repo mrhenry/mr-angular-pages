@@ -1,4 +1,5 @@
 import {beforeBoot} from 'fd-angular-core';
+import {I18n} from 'mr-angular-i18n';
 
 let summariesPromise;
 
@@ -8,7 +9,11 @@ export function fetchSummaries() {
 	if (summariesPromise) {
 		return summariesPromise;
 	}
-	summariesPromise = fetch("/api/pages.json")
+	summariesPromise = Promise.all([
+			fetch("/api/pages.json"),
+			I18n.ready(),
+		])
+		.then(a => a[0])
 		.then(status)
 		.then(json)
 		.then(makeTree);
@@ -32,29 +37,27 @@ function makeTree(data) {
 	let pagesByPath = {};
 	let roots = [];
 
-	if (navigator.language) {
-		let locale = navigator.language.split('-')[0];
-		if (!data.i18n.locales.indexOf(locale)) {
-			locale = data.i18n.default;
-		}
-		data.i18n.current = locale;
-	}
-
 	// localize
 	let lpages = [];
-	for (let locale of data.i18n.locales) {
+	for (let locale of I18n.locales.concat(['$current'])) {
+		let localeName = locale, inDefaultLocale = false;
+		if (locale === '$current') {
+			locale = I18n.current;
+			inDefaultLocale = true;
+		}
+
 		for (let page of pages) {
 			let clone = {};
 			Object.assign(clone, page);
 			clone.translations = undefined;
-			clone.id = `${locale}/${page.id}`;
+			clone.id = `${localeName}/${page.id}`;
 
 			let localeTranslations, defaultTranslations;
 			for (let t of page.translations) {
 				if (t.locale === locale) {
 					localeTranslations = t;
 				}
-				if (t.locale === data.i18n.default) {
+				if (t.locale === I18n.default) {
 					defaultTranslations = t;
 				}
 			}
@@ -68,13 +71,14 @@ function makeTree(data) {
 			}
 
 			clone.locale = locale;
+			clone.inDefaultLocale = inDefaultLocale;
 			if (isBlank(clone.long_title)) {
 				/* eslint camelcase:0 */
 				clone.long_title = clone.title;
 			}
 
 			if (page.parent_id) {
-				clone.parent_id = `${locale}/${page.parent_id}`;
+				clone.parent_id = `${localeName}/${page.parent_id}`;
 			}
 
 			pagesById[clone.id] = clone;
@@ -116,23 +120,36 @@ function makeTree(data) {
 	}
 
 	// map by path
+	let pagesByUnlocalisedPath = {};
 	for (let page of roots) {
-		makePath(page, `/${page.locale}`, pagesByPath);
-		if (page.locale === data.i18n.current) {
-			makePath(page, `/`, pagesByPath);
+		let locale = page.locale,
+				lprefix;
+
+		if (page.inDefaultLocale) {
+			locale = '$current';
+			lprefix = '/';
+		} else {
+			lprefix = `${locale}`;
 		}
+
+		if (!pagesByUnlocalisedPath[locale]) {
+			pagesByUnlocalisedPath[locale] = {};
+		}
+
+		makePath(page, `/`, lprefix, pagesByUnlocalisedPath[locale], pagesByPath);
 	}
 
 	return {
 		types: data.types,
-		i18n:  data.i18n,
 		pages: pagesByPath,
+		lpages: pagesByUnlocalisedPath,
 	};
 
-	function makePath(page, prefix, acc, root) {
+	function makePath(page, prefix, lprefix, acc, lacc, root) {
 
 		let slug = pageSlug(page);
 		let path = pathJoin(prefix, slug);
+		let lpath = pathJoin(lprefix, slug);
 
 		if (!root) {
 			root = page;
@@ -141,9 +158,10 @@ function makeTree(data) {
 		page.root = root;
 		page.path = path;
 		acc[path] = page;
+		lacc[lpath] = page;
 
 		for (let child of page.children) {
-			makePath(child, path, acc, root);
+			makePath(child, path, lpath, acc, lacc, root);
 		}
 	}
 

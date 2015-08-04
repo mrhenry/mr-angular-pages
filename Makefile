@@ -18,6 +18,7 @@ dist: lib $(LIB_FILES)
 	@mkdir -p dist
 	browserify lib/index.js -o dist/mr-angular-pages.raw.js --standalone=MrAngularPages --extension=js --debug \
 		--exclude fd-angular-core \
+		--exclude mr-angular-i18n \
 		--exclude mr-util
 	cat dist/mr-angular-pages.raw.js | exorcist dist/mr-angular-pages.js.map > dist/mr-angular-pages.js
 	rm dist/mr-angular-pages.raw.js

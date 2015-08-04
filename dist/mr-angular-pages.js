@@ -8,6 +8,8 @@ exports.fetchSummaries = fetchSummaries;
 
 var _fdAngularCore = require('fd-angular-core');
 
+var _mrAngularI18n = require('mr-angular-i18n');
+
 var summariesPromise = undefined;
 
 (0, _fdAngularCore.beforeBoot)(fetchSummaries());
@@ -16,7 +18,9 @@ function fetchSummaries() {
 	if (summariesPromise) {
 		return summariesPromise;
 	}
-	summariesPromise = fetch('/api/pages.json').then(status).then(json).then(makeTree);
+	summariesPromise = Promise.all([fetch('/api/pages.json'), _mrAngularI18n.I18n.ready()]).then(function (a) {
+		return a[0];
+	}).then(status).then(json).then(makeTree);
 	return summariesPromise;
 }
 
@@ -37,14 +41,6 @@ function makeTree(data) {
 	var pagesByPath = {};
 	var roots = [];
 
-	if (navigator.language) {
-		var locale = navigator.language.split('-')[0];
-		if (!data.i18n.locales.indexOf(locale)) {
-			locale = data.i18n['default'];
-		}
-		data.i18n.current = locale;
-	}
-
 	// localize
 	var lpages = [];
 	var _iteratorNormalCompletion = true;
@@ -52,7 +48,7 @@ function makeTree(data) {
 	var _iteratorError = undefined;
 
 	try {
-		for (var _iterator = data.i18n.locales[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+		for (var _iterator = _mrAngularI18n.I18n.locales[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
 			var locale = _step.value;
 			var _iteratorNormalCompletion6 = true;
 			var _didIteratorError6 = false;
@@ -80,7 +76,7 @@ function makeTree(data) {
 							if (t.locale === locale) {
 								localeTranslations = t;
 							}
-							if (t.locale === data.i18n['default']) {
+							if (t.locale === _mrAngularI18n.I18n['default']) {
 								defaultTranslations = t;
 							}
 						}
@@ -280,7 +276,7 @@ function makeTree(data) {
 			var page = _step4.value;
 
 			makePath(page, '/' + page.locale, pagesByPath);
-			if (page.locale === data.i18n.current) {
+			if (page.locale === _mrAngularI18n.I18n.current) {
 				makePath(page, '/', pagesByPath);
 			}
 		}
@@ -301,7 +297,6 @@ function makeTree(data) {
 
 	return {
 		types: data.types,
-		i18n: data.i18n,
 		pages: pagesByPath
 	};
 
@@ -375,7 +370,7 @@ function makeTree(data) {
 	}
 }
 
-},{"fd-angular-core":undefined}],2:[function(require,module,exports){
+},{"fd-angular-core":undefined,"mr-angular-i18n":undefined}],2:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -402,10 +397,10 @@ function mountPage(page, url) {
 		buildUiRouterState: builder
 	};
 
-	function builder() {
+	function builder(options) {
 		var _this = this;
 
-		var state = (0, _fdAngularCore.buildUiRouterState)(this.state);
+		var state = (0, _fdAngularCore.buildUiRouterState)(this.state, options);
 
 		state.absoluteName = true;
 		state.resolve.pageSummary = function () {
@@ -558,13 +553,15 @@ Object.defineProperty(exports, '__esModule', {
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
+var _fdAngularCore = require('fd-angular-core');
+
+var _mrAngularI18n = require('mr-angular-i18n');
+
 require('mr-util');
 
 var _Api = require('./Api');
 
 var _Page = require('./Page');
-
-var _fdAngularCore = require('fd-angular-core');
 
 var _preprocess = require('./preprocess');
 
@@ -605,7 +602,7 @@ function preprocess(data) {
 	var _iteratorError = undefined;
 
 	try {
-		for (var _iterator = data.i18n.locales[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+		for (var _iterator = _mrAngularI18n.I18n.locales[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
 			var locale = _step.value;
 
 			q.push((0, _preprocess.runPreprocessors)(data.pages['/' + locale]));
@@ -726,28 +723,7 @@ Root is the root pages according to the current locale.
 var Root = null;
 
 exports.Root = Root;
-/**
-I18n holds information about the available locales.
-
-@namespace I18n
-*/
-/**
-@var {string} current
-@memberof I18n
-*/
-/**
-@var {string} default
-@memberof I18n
-*/
-/**
-@var {string[]} locales
-@memberof I18n
-*/
-var I18n = null;
-
-exports.I18n = I18n;
 function exportData(data) {
-	exports.I18n = I18n = data.i18n;
 	exports.Root = Root = data.pages['/'];
 	exports.Roots = Roots = {};
 
@@ -756,7 +732,7 @@ function exportData(data) {
 	var _iteratorError3 = undefined;
 
 	try {
-		for (var _iterator3 = data.i18n.locales[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+		for (var _iterator3 = _mrAngularI18n.I18n.locales[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
 			var locale = _step3.value;
 
 			Roots[locale] = data.pages['/' + locale];
@@ -797,7 +773,7 @@ function lookupPageType(name) {
 	return type;
 }
 
-},{"./Api":1,"./Page":2,"./preprocess":5,"fd-angular-core":undefined,"mr-util":undefined}],4:[function(require,module,exports){
+},{"./Api":1,"./Page":2,"./preprocess":5,"fd-angular-core":undefined,"mr-angular-i18n":undefined,"mr-util":undefined}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {

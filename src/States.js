@@ -1,7 +1,8 @@
+import {beforeBoot, State, Metadata, buildUiRouterState} from 'fd-angular-core';
+import {I18n} from 'mr-angular-i18n';
 import 'mr-util';
 import {fetchSummaries} from './Api';
 import {registeredPageTypes, mountPage} from './Page';
-import {beforeBoot, State, Metadata} from 'fd-angular-core';
 import {runPreprocessors} from './preprocess';
 
 beforeBoot(awaitStates());
@@ -13,11 +14,35 @@ to mount all the child pages.
 @class PagesController
 */
 @State({
+	name:     'pages',
 	abstract: true,
 	hidden:   true,
 	template: `<ui-view></ui-view>`,
 })
-export class PagesController {}
+class PagesContainerController {
+}
+
+let pages = {};
+
+export function PagesController() {
+	return {
+		buildUiRouterState: builder,
+	};
+
+	function builder(options) {
+		let state = buildUiRouterState(PagesContainerController, options);
+
+		let children = [];
+		if (options.locale === null) {
+			children = pages.$current;
+		} else {
+			children = pages[options.locale];
+		}
+
+		state.children = children;
+		return state;
+	}
+}
 
 function awaitStates() {
 	return fetchSummaries()
@@ -31,7 +56,7 @@ function preprocess(data) {
 		runPreprocessors(data.pages["/"]),
 	];
 
-	for (let locale of data.i18n.locales) {
+	for (let locale of I18n.locales) {
 		q.push(runPreprocessors(data.pages["/" + locale]));
 	}
 
@@ -41,7 +66,6 @@ function preprocess(data) {
 function buildStates(data) {
 	let keys = Object.keys(data.pages);
 	let stateIndex = {}, metaIndex = {}, closestParentIndex = {};
-	let ctrlMeta = Metadata(PagesController);
 	keys.sort();
 
 	console.groupCollapsed("Pages");
@@ -86,7 +110,14 @@ function buildStates(data) {
 			stateIndex[path] = state;
 			metaIndex[path] = meta;
 			console.log("Page[%s] %o", path, page);
-			ctrlMeta.state.children.push(state);
+
+			if (page.inDefaultLocale) {
+				if (!pages.$current) { pages.$current = []; }
+				pages.$current.push(state);
+			} else {
+				if (!pages[page.locale]) { pages[page.locale] = []; }
+				pages[page.locale].push(state);
+			}
 		}
 
 	}
@@ -110,31 +141,12 @@ Root is the root pages according to the current locale.
 */
 export var Root = null;
 
-/**
-I18n holds information about the available locales.
-
-@namespace I18n
-*/
-/**
-@var {string} current
-@memberof I18n
-*/
-/**
-@var {string} default
-@memberof I18n
-*/
-/**
-@var {string[]} locales
-@memberof I18n
-*/
-export var I18n = null;
 
 function exportData(data) {
-	I18n = data.i18n;
 	Root = data.pages["/"];
 	Roots = {};
 
-	for (let locale of data.i18n.locales) {
+	for (let locale of I18n.locales) {
 		Roots[locale] = data.pages["/" + locale];
 	}
 

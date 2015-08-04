@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "fd-angular-core": "0.x.x",
+    "mr-angular-i18n": "0.x.x",
     "mr-util": "0.x.x"
   },
   "jspm": {
@@ -33,6 +34,7 @@
     "main": "src/index.js",
     "dependencies": {
       "fd-angular-core": "npm:fd-angular-core",
+      "mr-angular-i18n": "npm:mr-angular-i18n",
       "mr-util": "npm:mr-util"
     }
   }

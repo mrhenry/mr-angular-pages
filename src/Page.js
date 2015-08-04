@@ -14,8 +14,8 @@ export function mountPage(page, url, opts={}) {
 		buildUiRouterState: builder,
 	};
 
-	function builder() {
-		let state = buildUiRouterState(this.state);
+	function builder(options) {
+		let state = buildUiRouterState(this.state, options);
 
 		state.absoluteName = true;
 		state.resolve.pageSummary = () => { return this.page; };
