@@ -34,10 +34,13 @@ function makeTree(data) {
 
 	if (navigator.language) {
 		let locale = navigator.language.split('-')[0];
-		if (!data.i18n.locales.indexOf(locale)) {
+		if (data.i18n.locales.indexOf(locale) < 0) {
 			locale = data.i18n.default;
 		}
 		data.i18n.current = locale;
+	}
+	if (!data.i18n.current) {
+		data.i18n.current = data.i18n.default;
 	}
 
 	// localize
