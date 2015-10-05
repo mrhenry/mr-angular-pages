@@ -8,6 +8,8 @@ exports.fetchSummaries = fetchSummaries;
 
 var _fdAngularCore = require('fd-angular-core');
 
+var _index = require('./index');
+
 var summariesPromise = undefined;
 
 (0, _fdAngularCore.beforeBoot)(fetchSummaries());
@@ -16,19 +18,8 @@ function fetchSummaries() {
 	if (summariesPromise) {
 		return summariesPromise;
 	}
-	summariesPromise = fetch('/api/pages.json').then(status).then(json).then(makeTree);
+	summariesPromise = _index.currentLoader.summaries().then(makeTree);
 	return summariesPromise;
-}
-
-function status(resp) {
-	if (!resp.status === 200) {
-		throw Error('Unexpected response status: ' + resp.status);
-	}
-	return resp;
-}
-
-function json(resp) {
-	return resp.json();
 }
 
 function makeTree(data) {
@@ -39,10 +30,13 @@ function makeTree(data) {
 
 	if (navigator.language) {
 		var locale = navigator.language.split('-')[0];
-		if (!data.i18n.locales.indexOf(locale)) {
+		if (data.i18n.locales.indexOf(locale) < 0) {
 			locale = data.i18n['default'];
 		}
 		data.i18n.current = locale;
+	}
+	if (!data.i18n.current) {
+		data.i18n.current = data.i18n['default'];
 	}
 
 	// localize
@@ -375,7 +369,66 @@ function makeTree(data) {
 	}
 }
 
-},{"fd-angular-core":undefined}],2:[function(require,module,exports){
+},{"./index":5,"fd-angular-core":undefined}],2:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Loader = (function () {
+	function Loader() {
+		_classCallCheck(this, Loader);
+	}
+
+	_createClass(Loader, [{
+		key: "summaries",
+		value: function summaries() {
+			return this.fetch("/api/pages.json");
+		}
+	}, {
+		key: "details",
+		value: function details(pageId) {
+			return this.fetch("/api/pages/" + pageId + ".json");
+		}
+	}, {
+		key: "fetch",
+		value: (function (_fetch) {
+			function fetch(_x) {
+				return _fetch.apply(this, arguments);
+			}
+
+			fetch.toString = function () {
+				return _fetch.toString();
+			};
+
+			return fetch;
+		})(function (path) {
+			return fetch(path).then(status).then(json);
+		})
+	}]);
+
+	return Loader;
+})();
+
+exports.Loader = Loader;
+
+function status(resp) {
+	if (!resp.status === 200) {
+		throw Error("Unexpected response status: " + resp.status);
+	}
+	return resp;
+}
+
+function json(resp) {
+	return resp.json();
+}
+
+},{}],3:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -385,6 +438,8 @@ exports.mountPage = mountPage;
 exports.Page = Page;
 
 var _fdAngularCore = require('fd-angular-core');
+
+var _index = require('./index');
 
 var registeredPageTypes = {};
 
@@ -527,12 +582,10 @@ function Page() {
 		return constructor;
 	}
 
-	function loadPageDetails($http, pageId) {
-		return $http.get('/api/pages/' + pageId + '.json').then(function (x) {
-			return x.data;
-		});
+	function loadPageDetails($q, pageId) {
+		return $q.when(_index.currentLoader.details(pageId));
 	}
-	loadPageDetails.$inject = ['$http', 'pageId'];
+	loadPageDetails.$inject = ['$q', 'pageId'];
 
 	function applyPageSummary(data) {
 		this.$pageSummary = data;
@@ -548,7 +601,7 @@ function Page() {
 	return register;
 }
 
-},{"fd-angular-core":undefined}],3:[function(require,module,exports){
+},{"./index":5,"fd-angular-core":undefined}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -795,51 +848,54 @@ function lookupPageType(name) {
 	return type;
 }
 
-},{"./Api":1,"./Page":2,"./preprocess":5,"fd-angular-core":undefined,"mr-util":undefined}],4:[function(require,module,exports){
+},{"./Api":1,"./Page":3,"./preprocess":6,"fd-angular-core":undefined,"mr-util":undefined}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
-  value: true
+	value: true
 });
+exports.setPageLoader = setPageLoader;
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
 
 require('./Api');
 
+var _Loader = require('./Loader');
+
 var _States = require('./States');
 
 Object.defineProperty(exports, 'PagesController', {
-  enumerable: true,
-  get: function get() {
-    return _States.PagesController;
-  }
+	enumerable: true,
+	get: function get() {
+		return _States.PagesController;
+	}
 });
 Object.defineProperty(exports, 'Roots', {
-  enumerable: true,
-  get: function get() {
-    return _States.Roots;
-  }
+	enumerable: true,
+	get: function get() {
+		return _States.Roots;
+	}
 });
 Object.defineProperty(exports, 'Root', {
-  enumerable: true,
-  get: function get() {
-    return _States.Root;
-  }
+	enumerable: true,
+	get: function get() {
+		return _States.Root;
+	}
 });
 Object.defineProperty(exports, 'I18n', {
-  enumerable: true,
-  get: function get() {
-    return _States.I18n;
-  }
+	enumerable: true,
+	get: function get() {
+		return _States.I18n;
+	}
 });
 
 var _Page = require('./Page');
 
 Object.defineProperty(exports, 'Page', {
-  enumerable: true,
-  get: function get() {
-    return _Page.Page;
-  }
+	enumerable: true,
+	get: function get() {
+		return _Page.Page;
+	}
 });
 
 var _query = require('./query');
@@ -851,13 +907,21 @@ exports.pq = _pq;
 var _preprocess = require('./preprocess');
 
 Object.defineProperty(exports, 'preprocess', {
-  enumerable: true,
-  get: function get() {
-    return _preprocess.preprocess;
-  }
+	enumerable: true,
+	get: function get() {
+		return _preprocess.preprocess;
+	}
 });
+exports.PageLoader = _Loader.Loader;
+var currentLoader = new _Loader.Loader();
 
-},{"./Api":1,"./Page":2,"./States":3,"./preprocess":5,"./query":6}],5:[function(require,module,exports){
+exports.currentLoader = currentLoader;
+
+function setPageLoader(loader) {
+	exports.currentLoader = currentLoader = loader;
+}
+
+},{"./Api":1,"./Loader":2,"./Page":3,"./States":4,"./preprocess":6,"./query":7}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -920,7 +984,7 @@ preprocess(function addDepthToPages(root) {
 	});
 });
 
-},{"./query":6}],6:[function(require,module,exports){
+},{"./query":7}],7:[function(require,module,exports){
 
 
 /**
@@ -1098,6 +1162,6 @@ function findInChildren(query, acc) {
 	return acc;
 }
 
-},{}]},{},[4])(4)
+},{}]},{},[5])(5)
 });
 //# sourceMappingURL=mr-angular-pages.js.map

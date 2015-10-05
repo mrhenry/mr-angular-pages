@@ -1,4 +1,5 @@
 import {State, mountAt, Metadata, buildUiRouterState} from 'fd-angular-core';
+import {currentLoader} from './index';
 
 export var registeredPageTypes = {};
 
@@ -100,10 +101,10 @@ export function Page(opts={}) {
 		return constructor;
 	}
 
-	function loadPageDetails($http, pageId) {
-		return $http.get(`/api/pages/${pageId}.json`).then(x => x.data);
+	function loadPageDetails($q, pageId) {
+		return $q.when(currentLoader.details(pageId));
 	}
-	loadPageDetails.$inject = ['$http', 'pageId'];
+	loadPageDetails.$inject = ['$q', 'pageId'];
 
 	function applyPageSummary(data) {
 		this.$pageSummary = data;

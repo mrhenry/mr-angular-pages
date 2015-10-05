@@ -1,4 +1,5 @@
 import {beforeBoot} from 'fd-angular-core';
+import {currentLoader} from './index';
 
 let summariesPromise;
 
@@ -8,22 +9,8 @@ export function fetchSummaries() {
 	if (summariesPromise) {
 		return summariesPromise;
 	}
-	summariesPromise = fetch("/api/pages.json")
-		.then(status)
-		.then(json)
-		.then(makeTree);
+	summariesPromise = currentLoader.summaries().then(makeTree);
 	return summariesPromise;
-}
-
-function status(resp) {
-	if (!resp.status === 200) {
-		throw Error(`Unexpected response status: ${resp.status}`);
-	}
-	return resp;
-}
-
-function json(resp) {
-	return resp.json();
 }
 
 function makeTree(data) {
