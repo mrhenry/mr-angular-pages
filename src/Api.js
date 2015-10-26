@@ -3,7 +3,7 @@ import {currentLoader} from './index';
 
 let summariesPromise;
 
-beforeBoot(fetchSummaries());
+beforeBoot(fetchSummaries);
 
 export function fetchSummaries() {
 	if (summariesPromise) {

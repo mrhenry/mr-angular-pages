@@ -4,7 +4,7 @@ import {registeredPageTypes, mountPage} from './Page';
 import {beforeBoot, State, Metadata} from 'fd-angular-core';
 import {runPreprocessors} from './preprocess';
 
-beforeBoot(awaitStates());
+beforeBoot(awaitStates);
 
 /**
 PagesController holds all the Lalala pages. Include this state

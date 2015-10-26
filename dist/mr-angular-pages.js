@@ -12,7 +12,7 @@ var _index = require('./index');
 
 var summariesPromise = undefined;
 
-(0, _fdAngularCore.beforeBoot)(fetchSummaries());
+(0, _fdAngularCore.beforeBoot)(fetchSummaries);
 
 function fetchSummaries() {
 	if (summariesPromise) {
@@ -249,6 +249,8 @@ function makeTree(data) {
 				page.children = [];
 			}
 		}
+
+		// map by path
 	} catch (err) {
 		_didIteratorError3 = true;
 		_iteratorError3 = err;
@@ -264,7 +266,6 @@ function makeTree(data) {
 		}
 	}
 
-	// map by path
 	var _iteratorNormalCompletion4 = true;
 	var _didIteratorError4 = false;
 	var _iteratorError4 = undefined;
@@ -351,7 +352,7 @@ function makeTree(data) {
 		if (typeof page.static_uuid === 'string') {
 			return page.static_uuid;
 		}
-		return '';
+		return "";
 	}
 
 	function pathJoin(prefix, suffix) {
@@ -447,7 +448,7 @@ exports.registeredPageTypes = registeredPageTypes;
 var DEFAULT_SUFFIX = 'Page';
 
 function mountPage(page, url) {
-	var opts = arguments[2] === undefined ? {} : arguments[2];
+	var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 	var name = opts.name;
 
 	return {
@@ -521,17 +522,17 @@ class HomePage {
 */
 
 function Page() {
-	var opts = arguments[0] === undefined ? {} : arguments[0];
+	var opts = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
 	if (opts.url) {
-		throw '@Page({ url }) is not supported';
+		throw "@Page({ url }) is not supported";
 	}
 	if (opts.resolve) {
-		throw '@Page({ resolve }) is not supported';
+		throw "@Page({ resolve }) is not supported";
 	}
 
 	if (opts.asChild !== undefined) {
-		console.warn('@Page({ asChild }) is depricated use @Page({ embed }) instead.');
+		console.warn("@Page({ asChild }) is depricated use @Page({ embed }) instead.");
 		opts.embed = opts.asChild;
 	}
 
@@ -620,7 +621,7 @@ var _fdAngularCore = require('fd-angular-core');
 
 var _preprocess = require('./preprocess');
 
-(0, _fdAngularCore.beforeBoot)(awaitStates());
+(0, _fdAngularCore.beforeBoot)(awaitStates);
 
 /**
 PagesController holds all the Lalala pages. Include this state
@@ -649,7 +650,7 @@ function awaitStates() {
 }
 
 function preprocess(data) {
-	var q = [(0, _preprocess.runPreprocessors)(data.pages['/'])];
+	var q = [(0, _preprocess.runPreprocessors)(data.pages["/"])];
 
 	var _iteratorNormalCompletion = true;
 	var _didIteratorError = false;
@@ -659,7 +660,7 @@ function preprocess(data) {
 		for (var _iterator = data.i18n.locales[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
 			var locale = _step.value;
 
-			q.push((0, _preprocess.runPreprocessors)(data.pages['/' + locale]));
+			q.push((0, _preprocess.runPreprocessors)(data.pages["/" + locale]));
 		}
 	} catch (err) {
 		_didIteratorError = true;
@@ -689,7 +690,7 @@ function buildStates(data) {
 	var ctrlMeta = (0, _fdAngularCore.Metadata)(PagesController);
 	keys.sort();
 
-	console.groupCollapsed('Pages');
+	console.groupCollapsed("Pages");
 
 	var _iteratorNormalCompletion2 = true;
 	var _didIteratorError2 = false;
@@ -719,7 +720,7 @@ function buildStates(data) {
 				stateIndex[path] = state;
 				metaIndex[path] = meta;
 				closestParentIndex[path] = parentPath;
-				console.log('Page[%s] %o', path, page);
+				console.log("Page[%s] %o", path, page);
 				parentState.children.push(state);
 			} else if (closestParentIndex[parentPath]) {
 				var closestParentPath = closestParentIndex[parentPath];
@@ -731,13 +732,13 @@ function buildStates(data) {
 				metaIndex[path] = meta;
 
 				closestParentIndex[path] = closestParentPath;
-				console.log('Page[%s] %o', path, page);
+				console.log("Page[%s] %o", path, page);
 				parentState.children.push(state);
 			} else {
 				var state = _Page.mountPage.call(type, page, path);
 				stateIndex[path] = state;
 				metaIndex[path] = meta;
-				console.log('Page[%s] %o', path, page);
+				console.log("Page[%s] %o", path, page);
 				ctrlMeta.state.children.push(state);
 			}
 		}
@@ -799,7 +800,7 @@ var I18n = null;
 exports.I18n = I18n;
 function exportData(data) {
 	exports.I18n = I18n = data.i18n;
-	exports.Root = Root = data.pages['/'];
+	exports.Root = Root = data.pages["/"];
 	exports.Roots = Roots = {};
 
 	var _iteratorNormalCompletion3 = true;
@@ -810,7 +811,7 @@ function exportData(data) {
 		for (var _iterator3 = data.i18n.locales[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
 			var locale = _step3.value;
 
-			Roots[locale] = data.pages['/' + locale];
+			Roots[locale] = data.pages["/" + locale];
 		}
 	} catch (err) {
 		_didIteratorError3 = true;
@@ -839,7 +840,7 @@ function lookupPageType(name) {
 
 		name = this.types[name];
 		if (!name) {
-			throw Error('Unknown page types: ' + missing.join(', '));
+			throw Error("Unknown page types: " + missing.join(', '));
 		}
 
 		type = _Page.registeredPageTypes[name];
@@ -958,7 +959,7 @@ function runPreprocessors(root) {
 
 // Run functions returning promises sequentialy
 function seq(funcs) {
-	var idx = arguments[1] === undefined ? 0 : arguments[1];
+	var idx = arguments.length <= 1 || arguments[1] === undefined ? 0 : arguments[1];
 
 	var target = this;
 	if (!target.then) {
@@ -1082,7 +1083,7 @@ Find all pages matching a query.
 */
 
 function find(query) {
-	var acc = arguments[1] === undefined ? [] : arguments[1];
+	var acc = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
 
 	if (this.$pageSummary) {
 		var _context;
