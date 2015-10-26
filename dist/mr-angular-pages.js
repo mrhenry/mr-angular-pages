@@ -366,7 +366,7 @@ function makeTree(data) {
 	}
 
 	function isBlank(val) {
-		return val === undefined || val === null && val === '';
+		return val === undefined || val === null || val === '';
 	}
 }
 
