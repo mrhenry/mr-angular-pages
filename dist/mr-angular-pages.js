@@ -35,6 +35,7 @@ function makeTree(data) {
 		}
 		data.i18n.current = locale;
 	}
+
 	if (!data.i18n.current) {
 		data.i18n.current = data.i18n['default'];
 	}
@@ -60,6 +61,10 @@ function makeTree(data) {
 					Object.assign(clone, page);
 					clone.translations = undefined;
 					clone.id = locale + '/' + page.id;
+
+					page.translated = page.translated || {};
+					page.translated[locale] = clone;
+					clone.translated = page.translated;
 
 					var localeTranslations = undefined,
 					    defaultTranslations = undefined;
