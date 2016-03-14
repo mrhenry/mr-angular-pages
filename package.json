@@ -24,7 +24,7 @@
     "jsdoc": "^3.3.2"
   },
   "dependencies": {
-    "fd-angular-core": "0.x.x",
+    "fd-angular-core": "1.x.x",
     "mr-util": "0.x.x"
   },
   "jspm": {
