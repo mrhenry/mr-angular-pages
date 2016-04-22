@@ -26,6 +26,10 @@ class HomePage extends BasicPage {
   activate() {
     // Details are available here
   }
+  
+  detach() {
+    // When leaving this view
+  }
 
   someAction($event) {
     // perform some action here
